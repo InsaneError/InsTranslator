@@ -141,7 +141,7 @@ class InsTrans(loader.Module):
             pass
 
     @loader.command()
-    async def tlang(self, message):
+    async def tl(self, message):
         """[язык] - установить язык по умолчанию"""
         args = utils.get_args_raw(message)
         
