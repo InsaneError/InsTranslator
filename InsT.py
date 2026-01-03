@@ -9,10 +9,10 @@ class InsTrans(loader.Module):
     """Переводчик от @InsModule"""
     strings = {
         'name': 'InsTrans',
-        'no_text': 'Нет текста для перевода',
-        'unsupported_lang': 'Язык <code>{lang}</code> не поддерживается',
-        'error': 'Ошибка перевода',
-        'server_error': 'Сервер не отвечает'
+        'no_text': 'No text to translate',
+        'unsupported_lang': 'Language <code>{lang}</code> is not supported',
+        'error': 'Translation error',
+        'server_error': 'Server is not responding'
     }
     strings_ru = {
         'no_text': 'Нет текста для перевода',
@@ -24,7 +24,7 @@ class InsTrans(loader.Module):
     def __init__(self):
         self.config = loader.ModuleConfig(
             "DEFAULT_LANG", "RU", 
-            lambda: "Язык по умолчанию (RU, EN, DE, FR, ES, IT, JA, ZH, UK, AR, PT, KO, TR, PL, NL, HI, ID, VI, TH)"
+            "Default language (RU, EN, DE, FR, ES, IT, JA, ZH, UK, AR, PT, KO, TR, PL, NL, HI, ID, VI, TH)"
         )
         self.session = None
         self.supported_langs = {
@@ -46,7 +46,7 @@ class InsTrans(loader.Module):
             await self.session.close()
 
     async def translate_text(self, text: str, target_lang: str) -> str:
-        """Функция перевода"""
+        """Translate function"""
         if not text or not target_lang:
             return None
             
@@ -74,14 +74,12 @@ class InsTrans(loader.Module):
 
     @loader.command()
     async def t(self, message):
-        """[язык?] [текст/реплай] - перевод с удалением команды"""
+        """[язык?] [текст/реплай] - переводчик"""
         try:
             args = utils.get_args_raw(message)
             reply = await message.get_reply_message()
             
-            
             await message.delete()
-            
             
             text = ''
             if reply and (reply.text or reply.caption):
@@ -97,20 +95,17 @@ class InsTrans(loader.Module):
                     if potential_lang in self.supported_langs:
                         target_lang = potential_lang
             
-            
             if args and not reply:
                 parts = args.split(maxsplit=1)
                 if len(parts) > 0 and parts[0].upper() in self.supported_langs:
                     target_lang = parts[0].upper()
                     text = parts[1] if len(parts) > 1 else ''
             
-            
             if not text:
                 error_msg = await utils.answer(message, self.strings('no_text'))
                 await asyncio.sleep(3)
                 await error_msg.delete()
                 return
-            
             
             lang_code = self.supported_langs.get(target_lang)
             if not lang_code:
@@ -122,7 +117,6 @@ class InsTrans(loader.Module):
                 await error_msg.delete()
                 return
             
-            
             result = await self.translate_text(text, lang_code)
             
             if not result:
@@ -130,7 +124,6 @@ class InsTrans(loader.Module):
                 await asyncio.sleep(3)
                 await error_msg.delete()
                 return
-            
             
             await message.reply(
                 f"{result}",
@@ -142,15 +135,15 @@ class InsTrans(loader.Module):
 
     @loader.command()
     async def tlang(self, message):
-        """[язык] - установить язык по умолчанию"""
+        """[language] - установить язык"""
         args = utils.get_args_raw(message)
         
         if not args:
             langs = ', '.join(self.supported_langs.keys())
             await utils.answer(
                 message,
-                f"Текущий язык: <b>{self.config['DEFAULT_LANG']}</b>\n"
-                f"Поддерживаемые языки: {langs}"
+                f"Current language: <b>{self.config['DEFAULT_LANG']}</b>\n"
+                f"Supported languages: {langs}"
             )
             return
         
@@ -159,13 +152,13 @@ class InsTrans(loader.Module):
         if lang not in self.supported_langs:
             await utils.answer(
                 message,
-                f"Язык <code>{lang}</code> не поддерживается\n"
-                f"Доступные: {', '.join(self.supported_langs.keys())}"
+                f"Language <code>{lang}</code> is not supported\n"
+                f"Available: {', '.join(self.supported_langs.keys())}"
             )
             return
         
         self.config["DEFAULT_LANG"] = lang
         await utils.answer(
             message,
-            f"Язык по умолчанию <b>{lang}</b>"
+            f"Default language set to <b>{lang}</b>"
         )
